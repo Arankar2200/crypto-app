@@ -65,7 +65,7 @@ export default {
       const res = await this.$http.get(URL);
       this.quotes = await res.data;
     } catch (e) {
-      this.$notify({
+      await this.$notify({
         group: "app",
         type: "error",
         title: "WARN",

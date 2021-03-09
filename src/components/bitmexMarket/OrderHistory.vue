@@ -62,7 +62,7 @@ export default {
       const res = await authRequest("GET", "/order");
       await this.$set(this, "orders", res.data);
     } catch (e) {
-      this.$notify({
+      await this.$notify({
         group: "app",
         type: "error",
         title: "WARN",

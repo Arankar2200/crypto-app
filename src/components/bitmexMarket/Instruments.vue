@@ -57,7 +57,7 @@ export default {
         this.getSymbol(this.instruments[0].symbol);
       });
     } catch (error) {
-      this.$notify({
+      await this.$notify({
         group: "app",
         type: "error",
         title: "WARN",
