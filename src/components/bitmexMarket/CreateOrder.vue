@@ -10,6 +10,7 @@
           v-model="form.orderQty"
           label="Quantity"
           min="1"
+          step="1"
           required
         />
       </v-col>
@@ -53,7 +54,7 @@ export default {
   },
   methods: {
     async createOrder() {
-      this.btnLoading = true;
+      this.$set(this, "btnLoading", true);
       try {
         await authRequest("POST", "/order", this.form);
         await this.$notify({
@@ -62,7 +63,7 @@ export default {
           title: "SUCCESS",
           text: "Jobs done",
         });
-        this.btnLoading = false;
+        this.$set(this, "btnLoading", false);
       } catch (e) {
         await this.$notify({
           group: "app",
@@ -70,7 +71,7 @@ export default {
           title: "WARN",
           text: e.response.data.error.message,
         });
-        this.btnLoading = false;
+        this.$set(this, "btnLoading", false);
       }
     },
   },
