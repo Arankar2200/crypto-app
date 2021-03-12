@@ -1,6 +1,6 @@
 <template>
   <div>
-    <spinner v-if="orders.length === 0" />
+    <spinner v-if="ORDERS.length === 0" />
     <v-card v-else>
       <v-simple-table fixed-header height="35vh" dense>
         <template v-slot:default>
@@ -25,7 +25,7 @@
                 side,
                 price,
                 ordStatus,
-              } in orders"
+              } in ORDERS"
               :key="orderID"
             >
               <td>{{ orderID }}</td>
@@ -46,29 +46,17 @@
 </template>
 
 <script>
-import { authRequest } from "@/services";
-
+import { createNamespacedHelpers } from "vuex";
+const { mapActions, mapGetters } = createNamespacedHelpers("orders");
 export default {
   name: "orderHistory",
   components: {
     spinner: () => import("@/components/shared/LoadingSpinner"),
   },
-  data: () => ({
-    orders: [],
-  }),
-
-  async created() {
-    try {
-      const res = await authRequest("GET", "/order");
-      await this.$set(this, "orders", res.data);
-    } catch (e) {
-      await this.$notify({
-        group: "app",
-        type: "error",
-        title: "WARN",
-        text: e.response.data.error.message,
-      });
-    }
+  methods: mapActions(["GET_ORDERS"]),
+  computed: mapGetters(["ORDERS"]),
+  created() {
+    this.GET_ORDERS();
   },
 };
 </script>

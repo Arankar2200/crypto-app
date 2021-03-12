@@ -1,9 +1,9 @@
 <template>
   <v-card>
     <v-card-title class="success--text ">Create Order</v-card-title>
-    <v-form @submit.prevent="createOrder">
+    <v-form @submit.prevent="CREATE_ORDER(form)">
       <v-col>
-        <v-select :items="requestTypes" v-model="form.side" required />
+        <v-select :items="ORDER_SIDES" v-model="form.side" required />
         <v-text-field :value="symbol" label="Symbol" readonly />
         <v-text-field
           type="number"
@@ -14,14 +14,15 @@
           required
         />
       </v-col>
-      <v-btn block :color="btnColor" type="submit" :loading="btnLoading">
+      <v-btn block :color="btnColor" type="submit">
         {{ form.side === "Buy" ? "Buy" : "Sell" }}
       </v-btn>
     </v-form>
   </v-card>
 </template>
 <script>
-import { authRequest } from "@/services";
+import { createNamespacedHelpers } from "vuex";
+const { mapActions, mapGetters } = createNamespacedHelpers("orders");
 export default {
   props: {
     symbol: {
@@ -30,8 +31,6 @@ export default {
     },
   },
   data: () => ({
-    requestTypes: ["Buy", "Sell"],
-    btnLoading: false,
     form: {
       ordType: "Market",
       symbol: null,
@@ -40,39 +39,18 @@ export default {
     },
   }),
   computed: {
+    ...mapGetters(["ORDER_SIDES"]),
     btnColor() {
-      return this.form.side === "Buy" ? "success" : "red";
+      return this.form.side === "Buy" ? "success" : "error";
     },
   },
-  created() {
-    this.$set(this.form, "symbol", this.symbol);
-  },
+  methods: mapActions(["CREATE_ORDER"]),
   watch: {
-    symbol() {
-      this.$set(this.form, "symbol", this.symbol);
-    },
-  },
-  methods: {
-    async createOrder() {
-      this.$set(this, "btnLoading", true);
-      try {
-        await authRequest("POST", "/order", this.form);
-        await this.$notify({
-          group: "app",
-          type: "success",
-          title: "SUCCESS",
-          text: "Jobs done",
-        });
-        this.$set(this, "btnLoading", false);
-      } catch (e) {
-        await this.$notify({
-          group: "app",
-          type: "error",
-          title: "WARN",
-          text: e.response.data.error.message,
-        });
-        this.$set(this, "btnLoading", false);
-      }
+    symbol: {
+      handler() {
+        this.$set(this.form, "symbol", this.symbol);
+      },
+      immediate: true,
     },
   },
 };

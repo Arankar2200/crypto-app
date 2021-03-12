@@ -1,6 +1,6 @@
 <template>
   <div>
-    <spinner v-if="quotes.length === 0" />
+    <spinner v-if="QUOTES.length === 0" />
     <v-card v-else>
       <v-simple-table fixed-header height="60vh" dense>
         <template v-slot:default>
@@ -17,7 +17,7 @@
           <tbody>
             <tr
               v-for="({ open, high, low, close, volume, symbol, timestamp },
-              i) in quotes"
+              i) in QUOTES"
               :key="i"
             >
               <td>
@@ -36,9 +36,8 @@
   </div>
 </template>
 <script>
-const WebSocket = require("isomorphic-ws");
-import config from "@/config";
-
+import { createNamespacedHelpers } from "vuex";
+const { mapActions, mapGetters } = createNamespacedHelpers("trade");
 export default {
   name: "trade",
   components: {
@@ -50,50 +49,18 @@ export default {
       default: null,
     },
   },
-  data: () => ({
-    quotes: [],
-    tradingSocket: new WebSocket(config.socketUrl),
-  }),
+  computed: mapGetters(["QUOTES"]),
   methods: {
-    isWsOpen(ws) {
-      return ws.readyState === ws.OPEN;
-    },
+    ...mapActions(["GET_QUOTES", "SOCKET_QUOTES", "CLOSE_QUOTES_SOCKET"]),
   },
-  async created() {
-    try {
-      const URL = `/trade/bucketed?binSize=1m&partial=false&count=100&reverse=true&symbol=${this.symbol}`;
-      const res = await this.$http.get(URL);
-      this.quotes = await res.data;
-    } catch (e) {
-      await this.$notify({
-        group: "app",
-        type: "error",
-        title: "WARN",
-        text: e.response.data.error.message,
-      });
-    }
+  created() {
+    this.GET_QUOTES(this.symbol);
   },
   mounted() {
-    this.tradingSocket.onopen = () => {
-      this.tradingSocket.send(
-        `{"op": "subscribe", "args": "tradeBin1m:${this.symbol}"}`
-      );
-    };
-
-    this.tradingSocket.onmessage = (response) => {
-      const newQuotes = JSON.parse(response.data);
-      if (newQuotes.data && newQuotes.action === "insert") {
-        const updatedQuotes = [...newQuotes.data, ...this.quotes];
-        this.quotes = updatedQuotes.splice(0, 99);
-      }
-    };
+    this.SOCKET_QUOTES(this.symbol);
   },
   beforeDestroy() {
-    if (!this.isWsOpen(this.tradingSocket)) return;
-
-    this.tradingSocket.send(
-      `{"op": "unsubscribe", "args": "tradeBin1m:${this.symbol}"}`
-    );
+    this.CLOSE_QUOTES_SOCKET(this.symbol);
   },
 };
 </script>
